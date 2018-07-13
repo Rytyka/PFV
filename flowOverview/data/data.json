@@ -1,0 +1,76 @@
+[
+  {
+    "_id": "5b3cc69790210066f7e1b332",
+    "domainId": "eiffel001.seki.fem052",
+    "eventData": {
+      "baselineId": "",
+      "confidenceLevels": {
+        "2": "SUCCESS"
+      },
+      "flowContext": "DURA/ANY/main",
+      "gav": {
+        "artifactId": "CXP2010045_1",
+        "groupId": "com.ericsson",
+        "version": "R3A54"
+      },
+      "logReferences": {},
+      "optionalParameters": {
+        "msrbs_productid": "NOTSET",
+        "msrbs_prodver": "NOTSET"
+      }
+    },
+    "eventId": "B",
+    "eventSource": {
+      "hostName": "esekilxv9420",
+      "name": "fem052-eiffel001",
+      "pid": 20923,
+      "url": "https://fem052-eiffel001.rnd.ki.sw.ericsson.se:8443/jenkins/job/SendEiffelConfidenceLevelEvent-main/20019/"
+    },
+    "eventTime": "2018-07-04T13:07:34.796Z",
+    "eventType": "EiffelConfidenceLevelModifiedEvent",
+    "inputEventIds": [
+      "C",
+      "D"
+    ],
+    "outputEventIds": [
+      "ecb19cd2-cb6e-42e6-a7da-ca397a13e373"
+    ]
+  },
+   {
+    "_id": "5b3cc69790210066f7e1b332",
+    "domainId": "eiffel001.seki.fem052",
+    "eventData": {
+      "baselineId": "",
+      "confidenceLevels": {
+        "2": "SUCCESS"
+      },
+      "flowContext": "DURA/ANY/main",
+      "gav": {
+        "artifactId": "CXP2010045_1",
+        "groupId": "com.ericsson",
+        "version": "R3A54"
+      },
+      "logReferences": {},
+      "optionalParameters": {
+        "msrbs_productid": "NOTSET",
+        "msrbs_prodver": "NOTSET"
+      }
+    },
+    "eventId": "A",
+    "eventSource": {
+      "hostName": "esekilxv9420",
+      "name": "fem052-eiffel001",
+      "pid": 20923,
+      "url": "https://fem052-eiffel001.rnd.ki.sw.ericsson.se:8443/jenkins/job/SendEiffelConfidenceLevelEvent-main/20019/"
+    },
+    "eventTime": "2018-07-04T13:07:34.796Z",
+    "eventType": "EiffelConfidenceLevelModifiedEvent",
+    "inputEventIds": [
+      "C",
+      "D"
+    ],
+    "outputEventIds": [
+      "ecb19cd2-cb6e-42e6-a7da-ca397a13e373"
+    ]
+  }
+]
