@@ -24,10 +24,6 @@ This is the copy of dataMani_3 for using the 4th version of D3 layout.
         .labels{
         	font-family: sans-serif;
         	font-size: 20px;
-/*         	margin-top: 10px;
-margin-bottom: 10px;
-margin-left: 10px;
-margin-right: 10px; */
         }
 
     </style>
@@ -50,7 +46,7 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
     var width=2000,
         height=1000;
     var nwidth=width*0.15,
-        nheight=height*0.05;
+        nheight=height*0.04;
     //getting the JSON data
     function getData(){
 		  $.getJSON("data/CL8.json", function(data1){
@@ -132,13 +128,21 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
             var svg=d3.select('body').append('svg')
             .attr('width',width)
             .attr('height',height);
+            // var x = d3.scaleLog().rangeRound([0, width]);
 
             //set up simulation
             var simulation=d3.forceSimulation()
             				.nodes(d3.values(nodes));
             //adding forces
-            simulation.force("chargeForce",d3.forceManyBody().strength(-100))
+            simulation.force("chargeForce",d3.forceManyBody().strength(-80))
             		  .force("centerForce",d3.forceCenter(width/2,height/2))
+            		  .force("x",d3.forceX(function(d){
+            		  	if(d.CL.includes("1")) return 1*width/5;
+            		  	else if(d.CL.includes("2")) return 2*width/5;
+            		  	else if(d.CL.includes("3")) return 3*width/5;
+            		  	else if(d.CL.includes("4")) return 4*width/5;
+            		  	else return 0;
+            		}).strength(1))
             		  .force("links",link_force);
             var link=svg.append("g")
             		  .attr("class","links")
@@ -163,7 +167,7 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
             		  .data(d3.values(nodes))
             		  .enter()
             		  .append("text")
-            		  .text(function(d){return d.name;})
+            		  .text(function(d){return d.name+d.CL;})
 
             //function statusColor
             function statusColor(d){
@@ -179,9 +183,9 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
             function tickActions(){
             	node.attr("x",function(d){return d.x;})
             		.attr("y",function(d){return d.y;});
-            	link.attr("x1",function(d){return d.source.x+nwidth/2;})
+            	link.attr("x1",function(d){return d.source.x+nwidth;})
             		.attr("y1",function(d) {return d.source.y+nheight/2;})
-            		.attr("x2",function(d){return d.target.x+nwidth/2;})
+            		.attr("x2",function(d){return d.target.x;})
             		.attr("y2",function(d){return d.target.y+nheight/2;});
             	label.attr("x",function(d){return d.x+nwidth/10;})
             	     .attr("y",function(d){return d.y+nheight/2;});
@@ -241,7 +245,7 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
 </head>
 <body>
 
-	<h2>Product Flow Visualization</h2>
+
 
 
 </body>
