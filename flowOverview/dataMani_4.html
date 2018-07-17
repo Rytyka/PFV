@@ -1,0 +1,248 @@
+<!--###################################################################################################################
+#######################################################################################################################
+This is the copy of dataMani_3 for using the 4th version of D3 layout.
+#######################################################################################################################
+#######################################################################################################################
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style type="text/css">
+        .nodes{
+            fill:#ccd;
+            stroke:#fff;
+            stroke-width: 2px;
+        }
+        .links{
+            stroke: #777;
+            stroke-width:2px;
+            }
+        .labels{
+        	font-family: sans-serif;
+        	font-size: 20px;
+/*         	margin-top: 10px;
+margin-bottom: 10px;
+margin-left: 10px;
+margin-right: 10px; */
+        }
+
+    </style>
+
+<!--Good explanation of link.id for named indexes https://github.com/d3/d3-force/blob/master/README.md#link_id -->
+<!-- https://gojs.net/latest/samples/ldLayout.html -->
+<!-- Mapping color to the job status: https://github.com/dk8996/Gantt-Chart -->
+<!-- Layered Digraph layout: https://gojs.net/latest/samples/ldLayout.html -->
+
+<!-- 1. Changing circles to boxes: https://stackoverflow.com/questions/17853985/how-do-i-change-circular-to-rectangular-node-in-d3-force-layout
+    2. Creating a custom force layout to create initial posiitons of nodes: http://www.puzzlr.org/force-directed-graph-custom-forces/
+
+Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/11337732/layered-graphs-in-d3-js-->
+
+	<script>
+
+	var jsonData = {};
+     var links= [];
+    var nodes={};
+    var width=2000,
+        height=1000;
+    var nwidth=width*0.15,
+        nheight=height*0.05;
+    //getting the JSON data
+    function getData(){
+		  $.getJSON("data/CL8.json", function(data1){
+         /*For accessing the first event's event id*/
+        // console.log(data1[0].eventId);
+		  jsonData=data1;
+          readData(jsonData)
+	}).fail(function(error){
+		console.log("error");
+		console.log(error);
+	       });
+    }
+
+//reading the data elements
+
+    function readData(jsonData){
+        var found=false;
+	   $(jsonData).each(function(index,event){
+            if(event.eventType.indexOf("EiffelConfidenceLevelModifiedEvent") != -1){
+            eid=event.eventId; //eventID
+            ecl=Object.keys(event.eventData.confidenceLevels); //confidence Level
+            estatus=Object.values(event.eventData.confidenceLevels); //Status
+            eprod=event.eventData.gav.artifactId; //product Number
+            erev=event.eventData.gav.version; //revision
+            // console.log(index+":"+eid+" "+ecl+"     "+estatus+"   "+eprod+"     "+erev+"    ");
+            ename=eprod+" "+erev;
+            nodes[eid]={eventId: eid , name: ename, CL: JSON.stringify(ecl), status:JSON.stringify(estatus)};
+            einput=Object.values(event.inputEventIds);
+            for(i=0;i<einput.length;i++){
+            links.push({source:einput[i], target: eid});
+            }
+            }
+
+	   });
+       parseNodes(links,nodes);
+
+   }
+
+   function findElement(element){
+    var found=false;
+    $(jsonData).each(function(index,event){
+        if(element==event.eventId){
+            found=true;
+            eid=event.eventId; //eventID
+            ecl=event.eventData && event.eventData.confidenceLevels ? Object.keys(event.eventData.confidenceLevels) : "other";
+            estatus=event.eventData && event.eventData.confidenceLevels ? Object.values(event.eventData.confidenceLevels) : "other";
+            eprod=event.eventData && event.eventData.gav ? event.eventData.gav.artifactId : "other";
+            erev=event.eventData && event.eventData.gav ? event.eventData.gav.version : "other";
+            ename=eprod+" "+erev;
+            nodes[eid]={eventId: eid , name: ename, CL: JSON.stringify(ecl), status:JSON.stringify(estatus)};
+                }
+                    });
+    if(found==false){
+        nodes[element]={eventId: element , name: "not found", CL: "other", status:"other"};
+    }
+}
+
+        //parse Nodes from Links
+        function parseNodes(links,nodes){
+            links.forEach(function(link){
+                if (typeof(nodes[link.source]) == "undefined") {findElement(link.source); link.source = nodes[link.source];}
+                else { link.source = nodes[link.source]; }
+                if (typeof(nodes[link.target]) == "undefined") {findElement(link.target); link.target = nodes[link.target];}
+                else { link.target = nodes[link.target];}
+/*            link.source = nodes[link.source] || (nodes[link.source] ={name: link.source});
+            console.log(nodes[link.source]);
+            console.log(link.source);
+            link.target = nodes[link.target] || (nodes[link.target]={name:link.target});*/
+        } );
+            drawGraph(links,nodes);
+        }
+
+        //draw Graph
+        function drawGraph(links, nodes){
+
+    		console.log(nodes);
+
+            //add svg to the body
+            var svg=d3.select('body').append('svg')
+            .attr('width',width)
+            .attr('height',height);
+
+            //set up simulation
+            var simulation=d3.forceSimulation()
+            				.nodes(d3.values(nodes));
+            //adding forces
+            simulation.force("chargeForce",d3.forceManyBody().strength(-100))
+            		  .force("centerForce",d3.forceCenter(width/2,height/2))
+            		  .force("links",link_force);
+            var link=svg.append("g")
+            		  .attr("class","links")
+            		  .selectAll("line")
+            		  .data(links)
+            		  .enter()
+            		  .append("line")
+
+            var node=svg.append("g")
+            		 .attr("class","nodes")
+            		 .selectAll("rect")
+            		 .data(d3.values(nodes))
+            		 .enter()
+            		 .append("rect")
+            		 .attr("width",nwidth)
+            		 .attr("height",nheight)
+            		 .attr("fill",statusColor);
+
+            var label=svg.append("g")
+            		  .attr("class","labels")
+            		  .selectAll("text")
+            		  .data(d3.values(nodes))
+            		  .enter()
+            		  .append("text")
+            		  .text(function(d){return d.name;})
+
+            //function statusColor
+            function statusColor(d){
+            	if(d.status.includes("SUCCESS")){return "green";}
+            	else if(d.status.includes("FAIL")){return "red";}
+            	else {return;}
+            }
+
+
+            //creating the link force
+            var link_force=d3.forceLink(links).id(function(d){return d.eventId;})
+
+            function tickActions(){
+            	node.attr("x",function(d){return d.x;})
+            		.attr("y",function(d){return d.y;});
+            	link.attr("x1",function(d){return d.source.x+nwidth/2;})
+            		.attr("y1",function(d) {return d.source.y+nheight/2;})
+            		.attr("x2",function(d){return d.target.x+nwidth/2;})
+            		.attr("y2",function(d){return d.target.y+nheight/2;});
+            	label.attr("x",function(d){return d.x+nwidth/10;})
+            	     .attr("y",function(d){return d.y+nheight/2;});
+            }
+
+            simulation.on("tick",tickActions);
+/*            var force=d3.layout.force()
+            .size([width,height])
+            .nodes(d3.values(nodes))
+            .charge(-500)
+            //.nodes(nodes)
+            .links(links)
+            .on("tick",tick)
+            .linkDistance(35)
+            .start();
+
+            var link=svg.selectAll('.link')
+            .data(links)
+            .enter().append('line')
+            .attr('class','link');
+
+            var node=svg.selectAll('.node')
+            .data(force.nodes())
+            //.data(nodes)
+            .enter().append('rect')
+            .attr('class','node')
+            .attr('width',nwidth)
+            .attr('height',nheight);
+
+            var text = svg.append("g").selectAll("text")
+                        .data(force.nodes())
+                        .enter().append("text")
+                        .attr("x", 8)
+                        .attr("y", ".31em")
+                        .text(function(d) { return d.name+d.CL; });
+
+             function tick(e){
+                node.attr('x', function(d) {return d.x})
+                .attr('y', function(d) {return d.y})
+                .call(force.drag);
+
+                link.attr('x1', function(d) {return d.source.x; })
+                .attr('y1', function(d) {return d.source.y; })
+                .attr('x2', function(d) {return d.target.x; })
+                .attr('y2', function(d) {return d.target.y; });
+
+                text.attr('x', function(d) {return d.x;})
+                .attr('y', function(d) {return d.y;})
+                .call(force.drag);
+        }*/
+    }
+//main function
+
+      getData();
+
+    </script>
+</head>
+<body>
+
+	<h2>Product Flow Visualization</h2>
+
+
+</body>
+</html>
