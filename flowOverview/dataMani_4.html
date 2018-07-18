@@ -1,6 +1,6 @@
 <!--###################################################################################################################
 #######################################################################################################################
-This is the copy of dataMani_3 for using the 4th version of D3 layout.
+This is the copy of dataMani_3 for using the D3 v4 layout.
 #######################################################################################################################
 #######################################################################################################################
 -->
@@ -9,28 +9,32 @@ This is the copy of dataMani_3 for using the 4th version of D3 layout.
 <html>
 <head>
 	<meta charset="utf-8"/>
+	<svg width="960" height="600">
+	</svg>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <style type="text/css">
+
+
         .nodes{
             fill:#ccd;
             stroke:#fff;
-            stroke-width: 2px;
+            stroke-width: 1px;
         }
         .links{
             stroke: #777;
-            stroke-width:2px;
+            stroke-width:1.5px;
             }
         .labels{
         	font-family: sans-serif;
-        	font-size: 20px;
+        	font-size: 10px;
         }
 
     </style>
 
 <!--Good explanation of link.id for named indexes https://github.com/d3/d3-force/blob/master/README.md#link_id -->
-<!-- https://gojs.net/latest/samples/ldLayout.html -->
-<!-- Mapping color to the job status: https://github.com/dk8996/Gantt-Chart -->
+<!--Responsive SVG: https://stackoverflow.com/questions/16265123/resize-svg-when-window-is-resized-in-d3-js -->
+<!-- Resizing for force layout: https://bl.ocks.org/mbostock/raw/3355967/ -->
 <!-- Layered Digraph layout: https://gojs.net/latest/samples/ldLayout.html -->
 
 <!-- 1. Changing circles to boxes: https://stackoverflow.com/questions/17853985/how-do-i-change-circular-to-rectangular-node-in-d3-force-layout
@@ -43,10 +47,7 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
 	var jsonData = {};
      var links= [];
     var nodes={};
-    var width=2000,
-        height=1000;
-    var nwidth=width*0.15,
-        nheight=height*0.04;
+
     //getting the JSON data
     function getData(){
 		  $.getJSON("data/CL8.json", function(data1){
@@ -125,31 +126,38 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
     		console.log(nodes);
 
             //add svg to the body
-            var svg=d3.select('body').append('svg')
-            .attr('width',width)
-            .attr('height',height);
-            // var x = d3.scaleLog().rangeRound([0, width]);
+            var svg=d3.select('svg'),
+            width=+svg.attr("width"),
+            height=+svg.attr("height");
+            var nwidth=width*0.15,
+            nheight=height*0.04;
+           // console.log("width = "+window.innerWidth+", height = "+window.innerHeight);
+
 
             //set up simulation
             var simulation=d3.forceSimulation()
             				.nodes(d3.values(nodes));
             //adding forces
-            simulation.force("chargeForce",d3.forceManyBody().strength(-80))
-            		  .force("centerForce",d3.forceCenter(width/2,height/2))
+            simulation.force("chargeForce",d3.forceManyBody().strength(-10))
+            		  .force("centerForce",d3.forceCenter(width/3,height/2))
             		  .force("x",d3.forceX(function(d){
-            		  	if(d.CL.includes("1")) return 1*width/5;
-            		  	else if(d.CL.includes("2")) return 2*width/5;
-            		  	else if(d.CL.includes("3")) return 3*width/5;
-            		  	else if(d.CL.includes("4")) return 4*width/5;
+            		  	if(d.CL.includes("1")) return 1*width/4;
+            		  	else if(d.CL.includes("2")) return 2*width/4;
+            		  	else if(d.CL.includes("3")) return 3*width/4;
+            		  	else if(d.CL.includes("4")) return 4*width/4;
             		  	else return 0;
             		}).strength(1))
             		  .force("links",link_force);
-            var link=svg.append("g")
-            		  .attr("class","links")
-            		  .selectAll("line")
+
+            var l=svg.append("g")
+            		  .attr("class","links");
+
+            var link=l.selectAll("line")
             		  .data(links)
             		  .enter()
             		  .append("line")
+            		  .attr("marker-end","url(#end)");
+
 
             var node=svg.append("g")
             		 .attr("class","nodes")
@@ -161,20 +169,45 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
             		 .attr("height",nheight)
             		 .attr("fill",statusColor);
 
+            var marker=l.append("svg:defs").selectAll("marker")
+					    .data(["end"])      // Different link/path types can be defined here
+					    .enter().append("svg:marker")    // This section adds in the arrows
+					    .attr("id", String)
+					    .attr("viewBox", "0 -5 10 10")
+					    .attr("refX", 13.5)
+					    .attr("refY", 0)
+					    .attr("markerWidth", 3)
+					    .attr("markerHeight", 3)
+					    .attr("orient", "auto")
+					    .attr("fill","#777")
+					  	.append("svg:path")
+					    .attr("d", "M0,-5L10,0L0,5");
+
             var label=svg.append("g")
             		  .attr("class","labels")
             		  .selectAll("text")
             		  .data(d3.values(nodes))
             		  .enter()
             		  .append("text")
-            		  .text(function(d){return d.name+d.CL;})
+            		  .text(function(d){return d.name+d.CL;});
+
+
+
+
 
             //function statusColor
             function statusColor(d){
-            	if(d.status.includes("SUCCESS")){return "green";}
+            	if(d.status.includes("SUCCESS")){return "#408000";}
             	else if(d.status.includes("FAIL")){return "red";}
             	else {return;}
             }
+
+            //resize function
+            function resize() {
+            	width = window.innerWidth, height = window.innerHeight;
+            	svg.attr("width", width).attr("height", height);
+            	//force.size([width, height]).resume();
+			  }
 
 
             //creating the link force
@@ -186,9 +219,11 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
             	link.attr("x1",function(d){return d.source.x+nwidth;})
             		.attr("y1",function(d) {return d.source.y+nheight/2;})
             		.attr("x2",function(d){return d.target.x;})
-            		.attr("y2",function(d){return d.target.y+nheight/2;});
+            		.attr("y2",function(d){return d.target.y+nheight/3;});
             	label.attr("x",function(d){return d.x+nwidth/10;})
             	     .attr("y",function(d){return d.y+nheight/2;});
+            	resize();
+            	d3.select(window).on('resize',resize);
             }
 
             simulation.on("tick",tickActions);
@@ -243,10 +278,5 @@ Look into layered graphs in d3 using dagre: https://stackoverflow.com/questions/
 
     </script>
 </head>
-<body>
 
-
-
-
-</body>
 </html>
